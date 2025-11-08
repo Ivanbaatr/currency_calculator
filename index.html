@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>쉼표 적용 환율 계산기 (5:5 비율)</title>
+    <title>간단 환율 계산기</title>
     
     <style>
         /* CSS: 스타일링 */
@@ -17,7 +17,7 @@
             margin: 0;
         }
         .container {
-            width: 500px; /* 폭 유지 */
+            width: 380px;
             padding: 30px;
             border: 1px solid #ddd;
             border-radius: 12px;
@@ -38,59 +38,35 @@
             font-weight: bold;
             color: #555;
         }
-
-        /* --- 계산 섹션 한 줄 배치 (5:5 비율) --- */
-        .calculation-row {
-            display: flex;
-            gap: 20px;
-        }
-        
-        /* 5:5 비율 핵심: 두 섹션 모두 flex-grow: 1 적용 */
-        .currency-section {
-            flex-grow: 1; 
-            min-width: 0;
-        }
-
         /* 금액과 통화 단위를 감싸는 flex 컨테이너 */
         .amount-row {
             display: flex;
-            gap: 5px; 
+            gap: 10px;
         }
-        
         /* 공통 입력 스타일 */
         input[type="number"], .amount-row input[type="text"] {
-            padding: 10px; 
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px; 
-            transition: border-color 0.3s;
-        }
-        
-        /* 금액 입력 필드와 텍스트 입력 필드의 비율을 맞춤 */
-        .amount-row input[type="number"], 
-        .amount-row input[type="text"]:not(#unitB) { /* amountA와 unitA/B를 균등하게 */
-            /* flex-grow 값 재조정: (금액:단위) 비율을 약 3:1로 유지 */
-            flex-grow: 3; 
-            min-width: 0;
-        }
-        /* 통화 단위 입력 필드 (unitA, unitB) */
-        .amount-row input[type="text"] {
-            flex-grow: 1; 
-            max-width: 80px; 
-            text-align: center;
-        }
-
-        /* 기준 환율 필드 */
-        #exchangeRate {
-            width: 100%;
             padding: 12px;
             border: 1px solid #ccc;
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 18px;
+            transition: border-color 0.3s;
         }
-
+        /* 금액 입력 필드 */
+        .amount-row input[type="number"] {
+            flex-grow: 3; 
+            min-width: 0;
+        }
+        /* 통화 단위 입력 필드 */
+        .amount-row input[type="text"] {
+            flex-grow: 1; 
+            max-width: 100px;
+            text-align: center;
+        }
+        /* 기준 환율 필드 */
+        #exchangeRate {
+            width: 100%;
+        }
         input:focus {
             border-color: #007bff;
             outline: none;
@@ -114,51 +90,38 @@
 
         <hr>
         
-        <div class="calculation-row">
-            
-            <div class="currency-section">
-                <label>왼쪽 금액 및 통화</label>
-                <div class="amount-row">
-                    <input type="number" id="amountA" value="10" min="0">
-                    <input type="text" id="unitA" value="USD" placeholder="통화">
-                </div>
+        <div class="input-group">
+            <label>왼쪽 금액 및 통화</label>
+            <div class="amount-row">
+                <input type="number" id="amountA" value="10" min="0">
+                <input type="text" id="unitA" value="USD" placeholder="통화">
             </div>
+        </div>
 
-            <div class="currency-section">
-                <label>오른쪽 금액 및 통화</label>
-                <div class="amount-row">
-                    <input type="text" id="amountB" value="10,000.00" readonly> 
-                    <input type="text" id="unitB" value="KRW" placeholder="통화">
-                </div>
+        <div class="input-group">
+            <label>오른쪽 금액 및 통화</label>
+            <div class="amount-row">
+                <input type="number" id="amountB" value="10000" min="0">
+                <input type="text" id="unitB" value="KRW" placeholder="통화">
             </div>
-            
         </div>
 
     </div>
 
     <script>
-        // JavaScript: 계산 로직 (쉼표 적용 로직 유지)
+        // JavaScript: 계산 로직
         document.addEventListener('DOMContentLoaded', () => {
             // 1. DOM 요소 가져오기
             const rateInput = document.getElementById('exchangeRate');
             const amountAInput = document.getElementById('amountA');
             const amountBInput = document.getElementById('amountB');
 
-            // 2. 헬퍼 함수: 숫자 형식을 쉼표가 있는 문자열로 변환
-            function formatNumber(num) {
-                // toLocaleString을 사용하여 세 자리마다 쉼표를 찍고, 소수점 2자리를 유지합니다.
-                return (parseFloat(num)).toLocaleString('ko-KR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
-
-            // 3. 계산 함수 정의
+            // 2. 계산 함수 정의
             
             // 왼쪽 금액(A) 또는 환율(R)이 변경될 때 오른쪽 금액(B) 계산: B = A * R
             function calculateB() {
                 const R = parseFloat(rateInput.value) || 0;
-                const A = parseFloat(amountAInput.value) || 0; 
+                const A = parseFloat(amountAInput.value) || 0;
                 
                 if (R <= 0) {
                     amountBInput.value = '환율 오류';
@@ -166,19 +129,13 @@
                 }
 
                 const B = A * R;
-                // B의 결과를 쉼표가 있는 문자열로 변환하여 출력
-                amountBInput.value = formatNumber(B);
+                amountBInput.value = B.toFixed(2); // 소수점 2자리 표시
             }
 
             // 오른쪽 금액(B)이 변경될 때 왼쪽 금액(A) 계산: A = B / R
             function calculateA() {
                 const R = parseFloat(rateInput.value) || 0;
-                
-                // amountBInput이 type="text"이고 readonly로 설정되었으므로, 
-                // 이 함수는 사실상 'amountB'의 값이 바뀌는 경우 (calculateB가 호출될 때) 실행될 필요가 없습니다.
-                // 그러나 사용자 입력이 가능하다고 가정하고 쉼표 제거 로직을 유지합니다.
-                const B_formatted = amountBInput.value.replace(/,/g, '');
-                const B = parseFloat(B_formatted) || 0;
+                const B = parseFloat(amountBInput.value) || 0;
 
                 if (R <= 0) {
                     amountAInput.value = '환율 오류';
@@ -186,17 +143,16 @@
                 }
                 
                 const A = B / R;
-                amountAInput.value = formatNumber(A);
+                amountAInput.value = A.toFixed(2); // 소수점 2자리 표시
             }
 
-            // 4. 이벤트 리스너 등록
-            
-            // 현재 amountB는 readonly이므로 calculateA 이벤트 리스너는 제거하거나 무시합니다.
+            // 3. 이벤트 리스너 등록
+            // 기준 환율(R) 또는 왼쪽 금액(A) 변경 시 -> B 계산
             rateInput.addEventListener('input', calculateB);
             amountAInput.addEventListener('input', calculateB);
-            
-            // 만약 amountB를 다시 입력 가능하게 하려면 아래 줄의 주석을 해제하세요.
-            // amountBInput.addEventListener('input', calculateA);
+
+            // 오른쪽 금액(B) 변경 시 -> A 계산
+            amountBInput.addEventListener('input', calculateA);
 
             // 초기 로드 시 한 번 계산 실행
             calculateB(); 
