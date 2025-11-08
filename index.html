@@ -185,10 +185,18 @@
             // 5. 환율 계산 함수 (주 계산 로직)
             
             // 왼쪽 금액(A) 기준으로 오른쪽 금액(B) 계산: B = A * R
-            function calculateB() {
+            // finalAmountA: 수식 계산 완료 시 정확한 숫자 값을 직접 전달받음 (버그 수정 로직)
+            function calculateB(finalAmountA = null) {
                 const R = parseAmount(rateInput.value);
-                // amountA에서 쉼표를 제거하고 숫자로 변환
-                const A = parseAmount(amountAInput.value);
+                
+                let A;
+                if (finalAmountA !== null) {
+                    // '계산 완료' 버튼 클릭 시: 정확한 계산 결과를 사용
+                    A = finalAmountA;
+                } else {
+                    // 실시간 입력 시: 입력 필드에서 값을 파싱하여 사용
+                    A = parseAmount(amountAInput.value); 
+                }
                 
                 if (R <= 0 && A > 0) {
                     amountBInput.value = '환율 오류';
@@ -224,30 +232,32 @@
             unitBInput.addEventListener('input', applyUppercase);
 
             // 7. 이벤트 리스너 등록
-            rateInput.addEventListener('input', calculateB);
+            // rateInput 변경 시에는 calculateB를 인자 없이 호출
+            rateInput.addEventListener('input', () => calculateB()); 
             amountBInput.addEventListener('input', calculateA);
 
-            // amountA 입력 시에는 수식 입력을 위해 쉼표 포맷팅을 하지 않고 B만 계산합니다.
-            amountAInput.addEventListener('input', calculateB); 
+            // amountA 입력 시에도 calculateB를 인자 없이 호출하여 실시간으로 B를 업데이트
+            amountAInput.addEventListener('input', () => calculateB()); 
 
             // 8. '계산 완료' 버튼 클릭 이벤트 (수식 평가 후 A 필드 업데이트 및 포맷)
             window.calculateAmountA = function() {
                 const expression = amountAInput.value;
-                const result = evaluateExpression(expression);
+                const result = evaluateExpression(expression); // raw float number
                 
                 // 수식 결과가 유효하면 amountA를 포맷된 결과로 업데이트
                 if (result !== 0 || expression.trim() !== '') {
                    amountAInput.value = formatNumber(result);
                 }
-                // A가 업데이트되었으므로 B를 다시 계산
-                calculateB();
+                // *수정*: A가 업데이트되었으므로, 정확한 raw result 값을 인자로 전달하여 B를 다시 계산
+                calculateB(result);
             };
 
-            // 9. '계산 완료' 버튼 클릭 이벤트 (amountB 포맷팅)
+            // 9. '계산 완료' 버튼 클릭 이벤트 (amountB 포맷팅 후 A 역산)
             window.calculateAmountB = function() {
                 const B = parseAmount(amountBInput.value);
-                // B를 포맷된 결과로 업데이트하고 A를 계산
+                // B를 포맷된 결과로 업데이트
                 amountBInput.value = formatNumber(B);
+                // A를 역산하여 업데이트
                 calculateA();
             };
         });
