@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>결과 통합 환율 계산기</title>
+    <title>단위 구분 쉼표 적용 환율 계산기</title>
     
     <style>
-        /* CSS: 스타일링 */
+        /* CSS: 스타일링 (변경 없음) */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -48,7 +48,7 @@
         
         /* 통화 단위 입력 필드 (가장 왼쪽) */
         .amount-row .unit-input {
-            order: 1;
+            order: 1; 
             flex-grow: 0;
             width: 70px;
             text-align: center;
@@ -56,14 +56,14 @@
         
         /* 금액 입력 필드 (가운데) */
         .amount-row .amount-input {
-            order: 2;
-            flex-grow: 1;
+            order: 2; 
+            flex-grow: 1; 
             min-width: 0;
         }
         
         /* 완료 버튼 (가장 오른쪽) */
         .amount-row .calc-button {
-            order: 3;
+            order: 3; 
             flex-grow: 0;
             padding: 12px 10px;
             font-size: 14px;
@@ -104,24 +104,6 @@
             background: #eee;
             margin: 25px 0;
         }
-
-        /* --- 계산 결과 표시 스타일 --- */
-        #resultDisplay {
-            margin-top: 5px;
-            margin-bottom: 10px;
-            padding: 10px 0;
-            text-align: right; /* 오른쪽 정렬 */
-            font-size: 24px; /* 크게 표시 */
-            font-weight: bold;
-            color: #28a745; /* 강조 색상 */
-            border-bottom: 1px solid #e9ecef;
-        }
-        #resultUnit {
-            font-size: 16px;
-            font-weight: normal;
-            color: #6c757d;
-            margin-left: 10px;
-        }
     </style>
 </head>
 <body>
@@ -138,12 +120,6 @@
         
         <div class="input-group">
             <label>왼쪽 금액 및 통화 (수식 입력 가능: 10*1.1-2.5)</label>
-            
-            <div id="resultDisplay">
-                <span id="amountB_display">0.00</span>
-                <span id="unitB_display" style="color: #495057;">KRW</span>
-            </div>
-
             <div class="amount-row">
                 <input type="text" id="unitA" class="unit-input" placeholder="통화">
                 <input type="text" id="amountA" class="amount-input" placeholder="수식을 입력하세요">
@@ -151,9 +127,14 @@
             </div>
         </div>
 
-        <div class="input-group" style="display: none;">
-            <input type="number" id="amountB" value="0" style="display: none;">
+        <div class="input-group">
+            <label>오른쪽 금액 및 통화</label>
+            <div class="amount-row">
+                <input type="text" id="unitB" class="unit-input" placeholder="통화">
+                <input type="number" id="amountB" class="amount-input" placeholder="계산 결과">
+                <button class="calc-button" onclick="calculateAmountB()">계산 완료</button>
             </div>
+        </div>
 
     </div>
 
@@ -163,20 +144,36 @@
             // 1. DOM 요소 가져오기
             const rateInput = document.getElementById('exchangeRate');
             const amountAInput = document.getElementById('amountA');
-            const amountBDisplay = document.getElementById('amountB_display'); // 결과 표시 span
-            const unitADisplay = document.getElementById('unitA'); // 왼쪽 통화 단위
-            const unitBDisplay = document.getElementById('unitB_display'); // 결과 통화 단위 표시 span
-            const hiddenAmountB = document.getElementById('amountB'); // 숨겨진 amountB (계산 로직 유지용)
-            const hiddenUnitB = document.getElementById('unitB'); // 숨겨진 unitB (계산 로직 유지용)
+            const amountBInput = document.getElementById('amountB');
+            const unitAInput = document.getElementById('unitA');
+            const unitBInput = document.getElementById('unitB');
 
-            // 2. 수식을 평가하여 숫자로 변환하는 함수
+            // 2. 쉼표 제거 및 숫자 변환 함수
+            function parseAmount(value) {
+                // 쉼표를 제거하고 숫자로 변환 (수식 평가 시 쉼표는 방해 요소)
+                return parseFloat(String(value).replace(/,/g, '')) || 0;
+            }
+
+            // 3. 숫자에 쉼표 포맷 적용 함수
+            function formatNumber(number) {
+                if (typeof number !== 'number' || isNaN(number)) return '';
+                // 소수점 두 자리로 고정하고 세 자리 쉼표 적용
+                return number.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            // 4. 수식을 평가하여 숫자로 변환하는 함수
             function evaluateExpression(expression) {
-                let cleanExpression = expression.replace(/[^-()\d/*+.]/g, ''); 
+                let cleanExpression = String(expression).replace(/[^-()\d/*+.,]/g, ''); // 쉼표도 허용
+                // 수식 계산 시 쉼표는 방해되므로 제거 후 평가
+                cleanExpression = cleanExpression.replace(/,/g, ''); 
+
                 if (cleanExpression.trim() === '') return 0;
+
                 try {
                     let result = eval(cleanExpression);
+                    
                     if (isFinite(result)) {
-                        return parseFloat(result.toFixed(5));
+                        return parseFloat(result.toFixed(2)); // 결과는 소수점 두 자리로
                     } else {
                         return 0;
                     }
@@ -185,74 +182,74 @@
                 }
             }
             
-            // 3. 환율 계산 함수 (주 계산 로직)
+            // 5. 환율 계산 함수 (주 계산 로직)
             
             // 왼쪽 금액(A) 기준으로 오른쪽 금액(B) 계산: B = A * R
             function calculateB() {
-                const R = parseFloat(rateInput.value) || 0;
-                const expression = amountAInput.value;
-                let A = evaluateExpression(expression); 
+                const R = parseAmount(rateInput.value);
+                // amountA에서 쉼표를 제거하고 숫자로 변환
+                const A = parseAmount(amountAInput.value);
                 
-                // 환율 또는 A가 0일 때 오류 처리
                 if (R <= 0 && A > 0) {
-                    amountBDisplay.textContent = '환율 오류';
+                    amountBInput.value = '환율 오류';
                     return;
                 }
-
-                // amountA에 수식이 있고, Enter나 버튼을 누르지 않았다면 B를 업데이트합니다.
-                // A가 0이 아니거나, 수식이 비어 있지 않을 경우에만 A를 업데이트 (수동 계산 완료를 위해 주석 처리)
-                // if (A !== 0 || expression.trim() !== '') {
-                //    amountAInput.value = A;
-                // }
-
-                const B = A * R;
                 
-                // 쉼표 포맷 적용
-                const formattedB = B.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                amountBDisplay.textContent = formattedB;
-
-                // 통화 단위 업데이트
-                unitBDisplay.textContent = hiddenUnitB.value.toUpperCase() || '통화';
+                const B = A * R;
+                // B에 쉼표 포맷 적용
+                amountBInput.value = formatNumber(B);
             }
 
-            // 4. 통화 단위 입력 자동 대문자 변환 기능
-            function applyUppercase(event) {
-                event.target.value = event.target.value.toUpperCase();
-                
-                // 통화 단위 변경 시 결과 표시 단위도 즉시 업데이트
-                if (event.target.id === 'unitB') {
-                    unitBDisplay.textContent = event.target.value.toUpperCase() || '통화';
+            // 오른쪽 금액(B) 기준으로 왼쪽 금액(A) 계산: A = B / R
+            function calculateA() {
+                const R = parseAmount(rateInput.value);
+                // amountB에서 쉼표를 제거하고 숫자로 변환
+                const B = parseAmount(amountBInput.value);
+
+                if (R <= 0 && B > 0) {
+                    amountAInput.value = '환율 오류';
+                    return;
                 }
                 
-                // 환율 계산 재실행 (통화는 계산에 영향 없지만, 결과 표시를 위해)
-                calculateB();
+                const A = (R > 0) ? (B / R) : 0;
+                // A에 쉼표 포맷 적용
+                amountAInput.value = formatNumber(A);
             }
-            unitADisplay.addEventListener('input', applyUppercase);
-            hiddenUnitB.addEventListener('input', applyUppercase);
 
-            // 5. 이벤트 리스너 등록
+            // 6. 통화 단위 입력 자동 대문자 변환 기능
+            function applyUppercase(event) {
+                event.target.value = event.target.value.toUpperCase();
+            }
+            unitAInput.addEventListener('input', applyUppercase);
+            unitBInput.addEventListener('input', applyUppercase);
+
+            // 7. 이벤트 리스너 등록
             rateInput.addEventListener('input', calculateB);
-            
-            // amountA 입력 시 수식 평가 및 B 계산 (실시간)
-            amountAInput.addEventListener('input', calculateB);
-            
-            // 6. '계산 완료' 버튼 클릭 이벤트 (수식 평가 후 A 필드 업데이트)
+            amountBInput.addEventListener('input', calculateA);
+
+            // amountA 입력 시에는 수식 입력을 위해 쉼표 포맷팅을 하지 않고 B만 계산합니다.
+            amountAInput.addEventListener('input', calculateB); 
+
+            // 8. '계산 완료' 버튼 클릭 이벤트 (수식 평가 후 A 필드 업데이트 및 포맷)
             window.calculateAmountA = function() {
                 const expression = amountAInput.value;
                 const result = evaluateExpression(expression);
                 
-                // 수식 결과가 유효하면 amountA를 그 결과로 업데이트하고 B를 다시 계산
+                // 수식 결과가 유효하면 amountA를 포맷된 결과로 업데이트
                 if (result !== 0 || expression.trim() !== '') {
-                   amountAInput.value = result;
+                   amountAInput.value = formatNumber(result);
                 }
+                // A가 업데이트되었으므로 B를 다시 계산
                 calculateB();
             };
-            
-            // (amountB 섹션이 제거되었으므로 calculateAmountB는 제거)
-            
-            // 초기 통화 단위 설정
-            unitBDisplay.textContent = hiddenUnitB.value || 'KRW';
-            
+
+            // 9. '계산 완료' 버튼 클릭 이벤트 (amountB 포맷팅)
+            window.calculateAmountB = function() {
+                const B = parseAmount(amountBInput.value);
+                // B를 포맷된 결과로 업데이트하고 A를 계산
+                amountBInput.value = formatNumber(B);
+                calculateA();
+            };
         });
     </script>
 </body>
