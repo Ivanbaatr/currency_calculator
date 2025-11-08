@@ -17,7 +17,7 @@
             margin: 0;
         }
         .container {
-            width: 380px;
+            width: 500px; /* 폭을 넓혀서 두 항목을 나란히 배치할 공간 확보 */
             padding: 30px;
             border: 1px solid #ddd;
             border-radius: 12px;
@@ -38,20 +38,36 @@
             font-weight: bold;
             color: #555;
         }
+
+        /* --- 주요 변경 사항 --- */
+        
+        /* 두 개의 큰 섹션(왼쪽 금액, 오른쪽 금액)을 담는 컨테이너 */
+        .calculation-row {
+            display: flex;
+            gap: 20px; /* 섹션 간 간격 */
+        }
+        
+        /* 각 금액 섹션 (왼쪽, 오른쪽) */
+        .currency-section {
+            flex-grow: 1; /* 동일한 너비를 갖도록 설정 */
+            min-width: 0;
+        }
+
         /* 금액과 통화 단위를 감싸는 flex 컨테이너 */
         .amount-row {
             display: flex;
-            gap: 10px;
+            gap: 5px; /* 내부 요소 간 간격 축소 */
         }
+        
         /* 공통 입력 스타일 */
         input[type="number"], .amount-row input[type="text"] {
-            padding: 12px;
+            padding: 10px; /* 입력창 높이 축소 */
             border: 1px solid #ccc;
             border-radius: 6px;
             box-sizing: border-box;
-            font-size: 18px;
-            transition: border-color 0.3s;
+            font-size: 16px; /* 폰트 크기 축소 */
         }
+        
         /* 금액 입력 필드 */
         .amount-row input[type="number"] {
             flex-grow: 3; 
@@ -60,13 +76,20 @@
         /* 통화 단위 입력 필드 */
         .amount-row input[type="text"] {
             flex-grow: 1; 
-            max-width: 100px;
+            max-width: 80px; /* 너비 축소 */
             text-align: center;
         }
+        
         /* 기준 환율 필드 */
         #exchangeRate {
-            width: 100%; /* 너비를 100%로 유지 */
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 18px;
         }
+
         input:focus {
             border-color: #007bff;
             outline: none;
@@ -90,20 +113,24 @@
 
         <hr>
         
-        <div class="input-group">
-            <label>왼쪽 금액 및 통화</label>
-            <div class="amount-row">
-                <input type="number" id="amountA" value="10" min="0">
-                <input type="text" id="unitA" value="USD" placeholder="통화">
+        <div class="calculation-row">
+            
+            <div class="currency-section">
+                <label>왼쪽 금액 및 통화</label>
+                <div class="amount-row">
+                    <input type="number" id="amountA" value="10" min="0">
+                    <input type="text" id="unitA" value="USD" placeholder="통화">
+                </div>
             </div>
-        </div>
 
-        <div class="input-group">
-            <label>오른쪽 금액 및 통화</label>
-            <div class="amount-row">
-                <input type="number" id="amountB" value="10000" min="0">
-                <input type="text" id="unitB" value="KRW" placeholder="통화">
+            <div class="currency-section">
+                <label>오른쪽 금액 및 통화</label>
+                <div class="amount-row">
+                    <input type="number" id="amountB" value="10000" min="0">
+                    <input type="text" id="unitB" value="KRW" placeholder="통화">
+                </div>
             </div>
+            
         </div>
 
     </div>
@@ -129,7 +156,7 @@
                 }
 
                 const B = A * R;
-                amountBInput.value = B.toFixed(2); // 소수점 2자리 표시
+                amountBInput.value = B.toFixed(2);
             }
 
             // 오른쪽 금액(B)이 변경될 때 왼쪽 금액(A) 계산: A = B / R
@@ -143,15 +170,12 @@
                 }
                 
                 const A = B / R;
-                amountAInput.value = A.toFixed(2); // 소수점 2자리 표시
+                amountAInput.value = A.toFixed(2);
             }
 
             // 3. 이벤트 리스너 등록
-            // 기준 환율(R) 또는 왼쪽 금액(A) 변경 시 -> B 계산
             rateInput.addEventListener('input', calculateB);
             amountAInput.addEventListener('input', calculateB);
-
-            // 오른쪽 금액(B) 변경 시 -> A 계산
             amountBInput.addEventListener('input', calculateA);
 
             // 초기 로드 시 한 번 계산 실행
