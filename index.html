@@ -157,6 +157,18 @@
             color: white;
         }
         
+        /* 새로운 버튼 스타일 */
+        .special-func {
+            background-color: #17a2b8; /* 하늘색 계열 */
+            color: white;
+            font-size: 16px;
+            padding: 10px; /* 텍스트가 길어져서 패딩 줄임 */
+            line-height: 1.2;
+        }
+        .special-func:active {
+            background-color: #138496;
+        }
+        
         /* 용어 스타일 */
         .dynamic-unit {
             font-weight: 800;
@@ -205,7 +217,7 @@
             
             <div class="input-group">
                 <label>윗쪽 라인 (수식 입력): <span id="labelUnitA" class="dynamic-unit"></span></label>
-                <input type="text" id="formulaInput" class="formula-input" placeholder="계산할 수식을 입력하세요 (예: 100*1.2-5)">
+                <input type="text" id="formulaInput" class="formula-input" placeholder="계산할 수식을 입력하세요">
             </div>
 
             <div id="keypad">
@@ -222,17 +234,19 @@
                 <button class="keypad-button" onclick="appendChar('4')">4</button>
                 <button class="keypad-button" onclick="appendChar('5')">5</button>
                 <button class="keypad-button" onclick="appendChar('6')">6</button>
-                <button class="keypad-button operator" onclick="calculateFormula()">=</button>
+                
+                <button class="keypad-button special-func" onclick="applyTipTax()">팁/부과세 (%)</button>
 
                 <button class="keypad-button" onclick="appendChar('1')">1</button>
                 <button class="keypad-button" onclick="appendChar('2')">2</button>
                 <button class="keypad-button" onclick="appendChar('3')">3</button>
-                <button class="keypad-button" onclick="appendChar('.')">.</button>
                 
+                <button class="keypad-button special-func" onclick="applyDiscount()">할인 (%)</button>
+
                 <button class="keypad-button" onclick="appendChar('0')">0</button>
-                <button class="keypad-button" onclick="appendChar('(')">(</button>
-                <button class="keypad-button" onclick="appendChar(')')">)</button>
+                <button class="keypad-button" onclick="appendChar('.')">.</button>
                 <button class="keypad-button clear" onclick="deleteChar()">DEL</button>
+                <button class="keypad-button operator" onclick="calculateFormula()">=</button>
             </div>
             
             <button class="page-button calculate" onclick="calculateFormula()">계산 완료 및 환산</button>
@@ -249,28 +263,28 @@
     <script>
         // JavaScript: 페이지 전환 및 계산 로직
         document.addEventListener('DOMContentLoaded', () => {
-            // Page 1 Elements
+            // Page 1 Elements (생략)
             const rateInput = document.getElementById('rateInput');
             const amountA = document.getElementById('amountA');
             const amountB = document.getElementById('amountB');
             const unitA = document.getElementById('unitA');
             const unitB = document.getElementById('unitB');
 
-            // Page 2 Elements
+            // Page 2 Elements (생략)
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
             const rateInfo = document.getElementById('rateInfo');
             const formulaInput = document.getElementById('formulaInput');
             const resultDisplay = document.getElementById('resultDisplay');
-            const labelUnitA = document.getElementById('labelUnitA'); // 새 요소
-            const labelUnitB = document.getElementById('labelUnitB'); // 새 요소
+            const labelUnitA = document.getElementById('labelUnitA');
+            const labelUnitB = document.getElementById('labelUnitB');
 
-            // 전역 변수 (데이터 전달용)
+            // 전역 변수 (데이터 전달용) (생략)
             let currentRate = 0;
             let currentUnitA = '';
             let currentUnitB = '';
 
-            // --- Page 1 Logic (Basic Calculator) ---
+            // --- Page 1 Logic (Basic Calculator) (생략) ---
             function calculateB() {
                 const R = parseFloat(rateInput.value) || 0;
                 const A = parseFloat(amountA.value) || 0;
@@ -308,8 +322,44 @@
             window.deleteChar = function() {
                 formulaInput.value = formulaInput.value.slice(0, -1);
             };
+
+            // **새로운 기능 1: 팁 및 부과세 적용**
+            window.applyTipTax = function() {
+                const percentage = prompt("적용할 팁/부과세 비율(%)을 입력하세요. (예: 10)");
+                const rate = parseFloat(percentage);
+
+                if (isNaN(rate) || rate < 0) {
+                    if (percentage !== null) alert("유효한 비율을 입력해야 합니다.");
+                    return;
+                }
+                
+                // (1 + 비율/100) 형태로 수식에 추가
+                const multiplier = (1 + rate / 100).toFixed(4);
+                formulaInput.value += `*(${multiplier})`;
+                
+                // 수식을 적용한 후 바로 계산을 원할 경우 다음 줄 주석 해제
+                // calculateFormula();
+            };
+
+            // **새로운 기능 2: 할인 적용**
+            window.applyDiscount = function() {
+                const percentage = prompt("적용할 할인 비율(%)을 입력하세요. (예: 20)");
+                const rate = parseFloat(percentage);
+
+                if (isNaN(rate) || rate < 0 || rate > 100) {
+                    if (percentage !== null) alert("유효한 할인 비율(0~100)을 입력해야 합니다.");
+                    return;
+                }
+
+                // (1 - 비율/100) 형태로 수식에 추가
+                const multiplier = (1 - rate / 100).toFixed(4);
+                formulaInput.value += `*(${multiplier})`;
+
+                // 수식을 적용한 후 바로 계산을 원할 경우 다음 줄 주석 해제
+                // calculateFormula();
+            };
             
-            // --- Page 2 Formula Calculation Logic ---
+            // --- Page 2 Formula Calculation Logic (생략) ---
             window.calculateFormula = function() {
                 const expression = formulaInput.value;
                 
@@ -339,7 +389,7 @@
                 }
             };
             
-            // --- Page Navigation Logic ---
+            // --- Page Navigation Logic (생략) ---
             window.goToPage2 = function() {
                 const rate = parseFloat(rateInput.value);
                 const unitAValue = unitA.value.toUpperCase();
@@ -357,7 +407,6 @@
                 const formattedRate = rate.toLocaleString('ko-KR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
                 rateInfo.textContent = `기준 환율: ${currentUnitA} 1.00 = ${currentUnitB} ${formattedRate}`;
                 
-                // **여기서 라벨 업데이트**
                 labelUnitA.textContent = currentUnitA;
                 labelUnitB.textContent = currentUnitB;
 
