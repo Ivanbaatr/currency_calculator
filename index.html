@@ -51,18 +51,18 @@
             box-sizing: border-box;
             font-size: 18px;
             transition: border-color 0.3s;
-            width: 100%; /* 기본값 */
+            width: 100%;
         }
         
-        /* 필드 순서 변경을 위한 CSS */
+        /* 통화 좌측 레이아웃 */
         .amount-row .unit-input {
-            order: 1; /* 통화: 왼쪽 */
+            order: 1; 
             flex-grow: 1; 
             max-width: 100px;
             text-align: center;
         }
         .amount-row .amount-input {
-            order: 2; /* 금액: 오른쪽 */
+            order: 2; 
             flex-grow: 3; 
             min-width: 0;
         }
@@ -82,7 +82,7 @@
         .page-button {
             width: 100%;
             padding: 15px;
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 6px;
@@ -91,19 +91,28 @@
             margin-top: 10px;
             transition: background-color 0.2s;
         }
+        .page-button.back {
+             background-color: #6c757d;
+        }
         .page-button:hover {
-            background-color: #1e7e34;
+            background-color: #0056b3;
         }
 
-        /* 환율 표시 (Page 2) */
-        #rateDisplay_p2 {
-            font-size: 16px;
+        /* 요약 표시 (Page 2) */
+        .summary-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .summary-item span {
+            display: block;
+            font-size: 24px;
             font-weight: bold;
-            color: #007bff;
-            padding: 5px;
-            text-align: center;
-            border-bottom: 1px dashed #ccc;
-            margin-bottom: 15px;
+            color: #28a745;
+        }
+        .summary-item label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -113,141 +122,147 @@
 
         <div id="page1">
             <div class="input-group">
-                <label for="rateInput_p1">기준 환율 (왼쪽 통화 1단위당 오른쪽 통화 금액)</label>
-                <input type="number" id="rateInput_p1" min="0.01" step="0.01" 
+                <label for="rateInput">기준 환율 (왼쪽 통화 1단위당 오른쪽 통화 금액)</label>
+                <input type="number" id="rateInput" min="0.01" step="0.01" 
                        placeholder="예: 1456">
             </div>
 
             <hr>
             
             <div class="input-group">
-                <label>왼쪽 통화 단위</label>
-                <input type="text" id="unitA_p1" placeholder="예: USD">
-            </div>
-
-            <div class="input-group">
-                <label>오른쪽 통화 단위</label>
-                <input type="text" id="unitB_p1" placeholder="예: KRW">
-            </div>
-
-            <button class="page-button" onclick="goToPage2()">계산기 페이지로 이동 ➡️</button>
-        </div>
-
-        <div id="page2" style="display: none;">
-            
-            <div id="rateDisplay_p2"></div>
-
-            <div class="input-group">
                 <label>왼쪽 금액 및 통화</label>
                 <div class="amount-row">
-                    <input type="text" id="unitA_p2" class="unit-input" readonly>
-                    <input type="number" id="amountA_p2" class="amount-input" min="0">
+                    <input type="text" id="unitA" class="unit-input" placeholder="통화">
+                    <input type="number" id="amountA" class="amount-input" min="0">
                 </div>
             </div>
-
-            <hr>
 
             <div class="input-group">
                 <label>오른쪽 금액 및 통화</label>
                 <div class="amount-row">
-                    <input type="text" id="unitB_p2" class="unit-input" readonly>
-                    <input type="number" id="amountB_p2" class="amount-input" min="0">
+                    <input type="text" id="unitB" class="unit-input" placeholder="통화">
+                    <input type="number" id="amountB" class="amount-input" min="0">
                 </div>
             </div>
 
-            <button class="page-button" onclick="goToPage1()">⬅️ 환율 재설정</button>
+            <button class="page-button" onclick="goToPage2()">계산 결과 요약 페이지로 이동 ➡️</button>
+        </div>
+
+        <div id="page2" style="display: none;">
+            
+            <h3>계산 결과 요약</h3>
+            
+            <div class="summary-item">
+                <label>적용된 기준 환율</label>
+                <span id="summaryRate"></span>
+            </div>
+            <div class="summary-item">
+                <label>왼쪽 통화 최종 금액</label>
+                <span id="summaryA"></span>
+            </div>
+            <div class="summary-item" style="border-bottom: none;">
+                <label>오른쪽 통화 최종 금액</label>
+                <span id="summaryB"></span>
+            </div>
+            
+            <button class="page-button back" onclick="goToPage1()">⬅️ 계산기 페이지로 돌아가기</button>
         </div>
     </div>
 
     <script>
         // JavaScript: 페이지 전환 및 계산 로직
         document.addEventListener('DOMContentLoaded', () => {
-            // Page 1 Elements
-            const rateInput_p1 = document.getElementById('rateInput_p1');
-            const unitA_p1 = document.getElementById('unitA_p1');
-            const unitB_p1 = document.getElementById('unitB_p1');
+            // Page 1 Elements (Calculator)
+            const rateInput = document.getElementById('rateInput');
+            const amountA = document.getElementById('amountA');
+            const amountB = document.getElementById('amountB');
+            const unitA = document.getElementById('unitA');
+            const unitB = document.getElementById('unitB');
 
-            // Page 2 Elements
+            // Page 2 Elements (Summary)
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
-            const rateDisplay_p2 = document.getElementById('rateDisplay_p2');
-            const amountA_p2 = document.getElementById('amountA_p2');
-            const amountB_p2 = document.getElementById('amountB_p2');
-            const unitA_p2 = document.getElementById('unitA_p2');
-            const unitB_p2 = document.getElementById('unitB_p2');
+            const summaryRate = document.getElementById('summaryRate');
+            const summaryA = document.getElementById('summaryA');
+            const summaryB = document.getElementById('summaryB');
 
             // 1. 환율 계산 함수 정의
-            let currentRate = 0; // P1에서 P2로 전달될 환율 값
-
+            
+            // 왼쪽 금액(A) 또는 환율(R)이 변경될 때 오른쪽 금액(B) 계산: B = A * R
             function calculateB() {
-                const R = currentRate;
-                const A = parseFloat(amountA_p2.value) || 0;
+                const R = parseFloat(rateInput.value) || 0;
+                const A = parseFloat(amountA.value) || 0;
                 
                 if (R <= 0 && A > 0) {
-                    amountB_p2.value = '오류';
+                    amountB.value = '오류';
                     return;
                 }
                 
                 const B = A * R;
-                amountB_p2.value = B.toFixed(2);
+                amountB.value = B.toFixed(2);
             }
 
+            // 오른쪽 금액(B)이 변경될 때 왼쪽 금액(A) 계산: A = B / R
             function calculateA() {
-                const R = currentRate;
-                const B = parseFloat(amountB_p2.value) || 0;
+                const R = parseFloat(rateInput.value) || 0;
+                const B = parseFloat(amountB.value) || 0;
 
                 if (R <= 0 && B > 0) {
-                    amountA_p2.value = '오류';
+                    amountA.value = '오류';
                     return;
                 }
                 
                 const A = B / R;
-                amountA_p2.value = A.toFixed(2);
+                amountA.value = A.toFixed(2);
             }
 
-            // 2. 통화 단위 입력 자동 대문자 변환 기능 (Page 1에만 적용)
+            // 2. 통화 단위 입력 자동 대문자 변환 기능
             function applyUppercase(event) {
                 event.target.value = event.target.value.toUpperCase();
+                // 통화 단위가 변경되면 계산을 다시 시도하여 오류가 있는지 확인 (필수는 아님)
+                calculateB(); 
             }
-            unitA_p1.addEventListener('input', applyUppercase);
-            unitB_p1.addEventListener('input', applyUppercase);
+            unitA.addEventListener('input', applyUppercase);
+            unitB.addEventListener('input', applyUppercase);
 
-            // 3. 페이지 이동 함수
+            // 3. Page 1 이벤트 리스너 등록 (실시간 계산)
+            rateInput.addEventListener('input', calculateB);
+            amountA.addEventListener('input', calculateB);
+            amountB.addEventListener('input', calculateA);
+
+            // 4. 페이지 이동 함수
+            
+            // Page 1 -> Page 2 (요약 페이지로 이동)
             window.goToPage2 = function() {
-                const rate = parseFloat(rateInput_p1.value);
-                const unitA = unitA_p1.value.toUpperCase();
-                const unitB = unitB_p1.value.toUpperCase();
+                const rate = parseFloat(rateInput.value);
+                const unitAValue = unitA.value.toUpperCase();
+                const unitBValue = unitB.value.toUpperCase();
+                const amountAValue = amountA.value;
+                const amountBValue = amountB.value;
 
-                if (isNaN(rate) || rate <= 0 || !unitA || !unitB) {
-                    alert('환율과 통화 단위를 모두 올바르게 입력해주세요.');
+                if (isNaN(rate) || rate <= 0 || !unitAValue || !unitBValue || !amountAValue || !amountBValue) {
+                    alert('모든 필수 항목(환율, 통화, 금액)을 입력/계산해주세요.');
                     return;
                 }
 
-                // 데이터 전달 및 저장
-                currentRate = rate;
-                unitA_p2.value = unitA;
-                unitB_p2.value = unitB;
+                // 요약 데이터 포맷
+                const formattedRate = rate.toLocaleString('ko-KR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
                 
-                // 환율 표시 업데이트
-                rateDisplay_p2.textContent = `기준 환율: ${unitA} 1.00 = ${unitB} ${rate.toFixed(4)}`;
+                // 데이터 전달 및 표시
+                summaryRate.textContent = `${unitAValue} 1.00 = ${unitBValue} ${formattedRate}`;
+                summaryA.textContent = `${amountAValue} ${unitAValue}`;
+                summaryB.textContent = `${amountBValue} ${unitBValue}`;
                 
                 // 페이지 전환
                 page1.style.display = 'none';
                 page2.style.display = 'block';
-
-                // 계산 리스너 등록 (Page 2에서만 동작)
-                amountA_p2.addEventListener('input', calculateB);
-                amountB_p2.addEventListener('input', calculateA);
             };
 
+            // Page 2 -> Page 1 (계산기 페이지로 돌아가기)
             window.goToPage1 = function() {
                 // 페이지 전환
                 page1.style.display = 'block';
                 page2.style.display = 'none';
-
-                // Page 2 리스너 제거 (중복 방지)
-                amountA_p2.removeEventListener('input', calculateB);
-                amountB_p2.removeEventListener('input', calculateA);
             };
         });
     </script>
