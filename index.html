@@ -178,7 +178,7 @@
             
             <div class="input-group">
                 <label>윗쪽 라인 (수식 입력): <span id="labelUnitA" class="dynamic-unit"></span></label>
-                <input type="text" id="formulaInput" class="formula-input" placeholder="계산할 수식을 입력하세요">
+                <input type="text" id="formulaInput" class="formula-input" placeholder="계산할 수식을 입력하세요" readonly>
             </div>
 
             <div id="keypad">
@@ -225,7 +225,7 @@
         'use strict';
         
         document.addEventListener('DOMContentLoaded', () => {
-            // ------------------ DOM 요소 선언 (const 사용) ------------------
+            // ------------------ DOM 요소 선언 ------------------
             const rateInput = document.getElementById('rateInput');
             const amountA = document.getElementById('amountA');
             const amountB = document.getElementById('amountB');
@@ -246,7 +246,6 @@
             let currentUnitB = '';
 
             // ------------------ Page 1 Logic (Basic Calculator) ------------------
-            
             const calculateB = () => {
                 const R = parseFloat(rateInput.value) || 0;
                 const A = parseFloat(amountA.value) || 0;
@@ -275,24 +274,21 @@
 
             // ------------------ Page 2 Keypad and Function Logic ------------------
             
-            // 키패드 입력 및 포커스 유지
+            // 키패드 입력 (focus() 제거)
             window.appendChar = (char) => {
                 formulaInput.value += char;
-                formulaInput.focus(); // 포커스 유지
             };
 
             window.clearInput = () => {
                 formulaInput.value = '';
                 resultDisplay.textContent = '0.00 ' + currentUnitB;
-                formulaInput.focus();
             };
 
             window.deleteChar = () => {
                 formulaInput.value = formulaInput.value.slice(0, -1);
-                formulaInput.focus();
             };
 
-            // 기능 1: 팁 및 부과세 적용
+            // 기능 1: 팁 및 부과세 적용 (focus() 제거)
             window.applyTipTax = () => {
                 const percentage = prompt("적용할 팁/부과세 비율(%)을 입력하세요. (예: 10)");
                 const rate = parseFloat(percentage);
@@ -304,10 +300,9 @@
                 
                 const multiplier = (1 + rate / 100).toFixed(4);
                 formulaInput.value += `*(${multiplier})`;
-                formulaInput.focus();
             };
 
-            // 기능 2: 할인 적용
+            // 기능 2: 할인 적용 (focus() 제거)
             window.applyDiscount = () => {
                 const percentage = prompt("적용할 할인 비율(%)을 입력하세요. (예: 20)");
                 const rate = parseFloat(percentage);
@@ -319,15 +314,13 @@
 
                 const multiplier = (1 - rate / 100).toFixed(4);
                 formulaInput.value += `*(${multiplier})`;
-                formulaInput.focus();
             };
             
-            // ------------------ Page 2 Formula Calculation Logic (eval() 대체) ------------------
+            // ------------------ Page 2 Formula Calculation Logic ------------------
             
             window.calculateFormula = () => {
                 const expression = formulaInput.value;
                 
-                // 수식 정제: 숫자, 사칙연산, 괄호, 소수점 외 문자 제거
                 const cleanExpression = String(expression).replace(/[^-()\d/*+.]/g, ''); 
                 if (cleanExpression.trim() === '') {
                     resultDisplay.textContent = '0.00 ' + currentUnitB;
@@ -336,7 +329,7 @@
 
                 let baseResult;
                 try {
-                    // **eval() 대체: new Function() 사용으로 보안 강화**
+                    // new Function() 사용
                     baseResult = new Function('return ' + cleanExpression)();
                     if (!isFinite(baseResult)) baseResult = 0;
                 } catch (e) {
@@ -382,14 +375,11 @@
 
                 page1.style.display = 'none';
                 page2.style.display = 'block';
-                formulaInput.focus(); // 페이지 이동 후 포커스 설정
             };
 
             window.goToPage1 = () => {
                 page1.style.display = 'block';
                 page2.style.display = 'none';
-                // Page 1의 amountA에 포커스 설정
-                amountA.focus(); 
             };
         });
     </script>
