@@ -6,7 +6,7 @@
     <title>환율 계산기</title> 
     
     <style>
-        /* CSS: 공통 스타일링 (일부 생략) */
+        /* CSS: 공통 스타일링 (이전과 동일) */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -129,10 +129,10 @@
             margin-bottom: 15px;
         }
         
-        /* ----------------------- 키패드 CSS ----------------------- */
+        /* 키패드 CSS */
         #keypad {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4열 그리드 */
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin-top: 15px;
         }
@@ -155,6 +155,13 @@
         .clear {
             background-color: #ff3b30;
             color: white;
+        }
+        
+        /* 용어 스타일 */
+        .dynamic-unit {
+            font-weight: 800;
+            color: #007bff;
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -197,7 +204,7 @@
             <div id="rateInfo" class="rate-info"></div>
             
             <div class="input-group">
-                <label>윗쪽 라인 (수식 입력, ${currentUnitA} 기준):</label>
+                <label>윗쪽 라인 (수식 입력): <span id="labelUnitA" class="dynamic-unit"></span></label>
                 <input type="text" id="formulaInput" class="formula-input" placeholder="계산할 수식을 입력하세요 (예: 100*1.2-5)">
             </div>
 
@@ -231,7 +238,7 @@
             <button class="page-button calculate" onclick="calculateFormula()">계산 완료 및 환산</button>
 
             <div class="input-group">
-                <label>아래쪽 라인 (환산 결과, ${currentUnitB} 기준):</label>
+                <label>아래쪽 라인 (환산 결과): <span id="labelUnitB" class="dynamic-unit"></span></label>
                 <div id="resultDisplay" class="result-display">0.00</div>
             </div>
             
@@ -255,6 +262,8 @@
             const rateInfo = document.getElementById('rateInfo');
             const formulaInput = document.getElementById('formulaInput');
             const resultDisplay = document.getElementById('resultDisplay');
+            const labelUnitA = document.getElementById('labelUnitA'); // 새 요소
+            const labelUnitB = document.getElementById('labelUnitB'); // 새 요소
 
             // 전역 변수 (데이터 전달용)
             let currentRate = 0;
@@ -322,7 +331,6 @@
                 const finalAmountA = parseFloat(baseResult.toFixed(2));
                 const finalAmountB = finalAmountA * currentRate;
 
-                // 결과 표시 (쉼표 포맷 적용)
                 if (finalAmountB !== 0 || finalAmountA !== 0) {
                     const formattedResult = finalAmountB.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     resultDisplay.textContent = formattedResult + ' ' + currentUnitB;
@@ -349,6 +357,10 @@
                 const formattedRate = rate.toLocaleString('ko-KR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
                 rateInfo.textContent = `기준 환율: ${currentUnitA} 1.00 = ${currentUnitB} ${formattedRate}`;
                 
+                // **여기서 라벨 업데이트**
+                labelUnitA.textContent = currentUnitA;
+                labelUnitB.textContent = currentUnitB;
+
                 formulaInput.value = '';
                 resultDisplay.textContent = '0.00 ' + currentUnitB;
 
