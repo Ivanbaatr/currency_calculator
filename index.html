@@ -144,7 +144,7 @@
 
         <div id="page1">
             <div class="input-group">
-                <label for="rateInput">기준 환율 (왼쪽 통화 1단위당 오른쪽 통화 금액)</label>
+                <label for="rateInput">적용 환율 (환전할 통화 1단위당 환전 후 통화 금액)</label>
                 <input type="number" id="rateInput" min="0.01" step="0.01" 
                        placeholder="예: 1456">
             </div>
@@ -152,7 +152,7 @@
             <hr>
             
             <div class="input-group">
-                <label>왼쪽 금액 및 통화</label>
+                <label>환전할 금액 및 통화</label>
                 <div class="amount-row">
                     <input type="text" id="unitA" class="unit-input" placeholder="통화">
                     <input type="number" id="amountA" class="amount-input" min="0">
@@ -160,14 +160,14 @@
             </div>
 
             <div class="input-group">
-                <label>오른쪽 금액 및 통화</label>
+                <label>환전 후 금액 및 통화</label>
                 <div class="amount-row">
                     <input type="text" id="unitB" class="unit-input" placeholder="통화">
                     <input type="number" id="amountB" class="amount-input" min="0">
                 </div>
             </div>
 
-            <button class="page-button" onclick="goToPage2()">수식 계산기로 이동 ➡️</button>
+            <button class="page-button" onclick="goToPage2()">수식 계산 모드 ➡️</button>
         </div>
 
         <div id="page2" style="display: none;">
@@ -177,7 +177,7 @@
             <div id="rateInfo" class="rate-info"></div>
             
             <div class="input-group">
-                <label>윗쪽 라인 (수식 입력): <span id="labelUnitA" class="dynamic-unit"></span></label>
+                <label>계산 금액 입력: <span id="labelUnitA" class="dynamic-unit"></span></label>
                 <input type="text" id="formulaInput" class="formula-input" placeholder="계산할 수식을 입력하세요" readonly>
             </div>
 
@@ -196,13 +196,13 @@
                 <button class="keypad-button" onclick="appendChar('5')">5</button>
                 <button class="keypad-button" onclick="appendChar('6')">6</button>
                 
-                <button class="keypad-button special-func" onclick="applyTipTax()">팁/부과세 (%)</button>
+                <button class="keypad-button special-func" onclick="applyTipTax()">팁 & 세금 (%)</button>
 
                 <button class="keypad-button" onclick="appendChar('1')">1</button>
                 <button class="keypad-button" onclick="appendChar('2')">2</button>
                 <button class="keypad-button" onclick="appendChar('3')">3</button>
                 
-                <button class="keypad-button special-func" onclick="applyDiscount()">할인 (%)</button>
+                <button class="keypad-button special-func" onclick="applyDiscount()">할인율 적용 (%)</button>
 
                 <button class="keypad-button" onclick="appendChar('0')">0</button>
                 <button class="keypad-button" onclick="appendChar('.')">.</button>
@@ -210,14 +210,14 @@
                 <button class="keypad-button operator" onclick="calculateFormula()">=</button>
             </div>
             
-            <button class="page-button calculate" onclick="calculateFormula()">계산 완료 및 환산</button>
+            <button class="page-button calculate" onclick="calculateFormula()">최종 금액 확정</button>
 
             <div class="input-group">
-                <label>아래쪽 라인 (환산 결과): <span id="labelUnitB" class="dynamic-unit"></span></label>
+                <label>최종 환산 금액: <span id="labelUnitB" class="dynamic-unit"></span></label>
                 <div id="resultDisplay" class="result-display">0.00</div>
             </div>
             
-            <button class="page-button back" onclick="goToPage1()">⬅️ 환율 재설정/기본 계산기</button>
+            <button class="page-button back" onclick="goToPage1()">⬅️ 처음으로 돌아가기</button>
         </div>
     </div>
 
@@ -274,7 +274,7 @@
 
             // ------------------ Page 2 Keypad and Function Logic ------------------
             
-            // 키패드 입력 (focus() 제거)
+            // 키패드 입력
             window.appendChar = (char) => {
                 formulaInput.value += char;
             };
@@ -288,9 +288,9 @@
                 formulaInput.value = formulaInput.value.slice(0, -1);
             };
 
-            // 기능 1: 팁 및 부과세 적용 (focus() 제거)
+            // 기능 1: 팁 및 부과세 적용
             window.applyTipTax = () => {
-                const percentage = prompt("적용할 팁/부과세 비율(%)을 입력하세요. (예: 10)");
+                const percentage = prompt("적용할 팁/세금 비율(%)을 입력하세요. (예: 10)");
                 const rate = parseFloat(percentage);
 
                 if (isNaN(rate) || rate < 0) {
@@ -302,7 +302,7 @@
                 formulaInput.value += `*(${multiplier})`;
             };
 
-            // 기능 2: 할인 적용 (focus() 제거)
+            // 기능 2: 할인 적용
             window.applyDiscount = () => {
                 const percentage = prompt("적용할 할인 비율(%)을 입력하세요. (예: 20)");
                 const rate = parseFloat(percentage);
@@ -329,7 +329,7 @@
 
                 let baseResult;
                 try {
-                    // new Function() 사용
+                    // new Function() 사용으로 보안 강화
                     baseResult = new Function('return ' + cleanExpression)();
                     if (!isFinite(baseResult)) baseResult = 0;
                 } catch (e) {
@@ -364,8 +364,9 @@
                 currentUnitA = unitAValue;
                 currentUnitB = unitBValue;
                 
+                // 라벨 업데이트
                 const formattedRate = rate.toLocaleString('ko-KR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-                rateInfo.textContent = `기준 환율: ${currentUnitA} 1.00 = ${currentUnitB} ${formattedRate}`;
+                rateInfo.textContent = `적용 환율: ${currentUnitA} 1.00 = ${currentUnitB} ${formattedRate}`;
                 
                 labelUnitA.textContent = currentUnitA;
                 labelUnitB.textContent = currentUnitB;
