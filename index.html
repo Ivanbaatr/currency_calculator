@@ -6,7 +6,7 @@
     <title>환율 계산기</title> 
     
     <style>
-        /* CSS: 공통 스타일링 (이전과 동일) */
+        /* CSS: 스타일링 (가독성을 위해 일부 축약) */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -38,12 +38,10 @@
             font-weight: bold;
             color: #555;
         }
-        /* 금액과 통화 단위를 감싸는 flex 컨테이너 */
         .amount-row {
             display: flex;
             gap: 10px;
         }
-        /* 공통 입력 스타일 */
         input[type="number"], input[type="text"], .formula-input, .result-display {
             padding: 12px;
             border: 1px solid #ccc;
@@ -53,8 +51,6 @@
             transition: border-color 0.3s;
             width: 100%;
         }
-        
-        /* 통화 좌측 레이아웃 (Page 1) */
         .amount-row .unit-input {
             order: 1; 
             flex-grow: 1; 
@@ -66,7 +62,6 @@
             flex-grow: 3; 
             min-width: 0;
         }
-        
         input:focus {
             border-color: #007bff;
             outline: none;
@@ -77,8 +72,6 @@
             background: #eee;
             margin: 25px 0;
         }
-
-        /* 버튼 스타일 */
         .page-button {
             width: 100%;
             padding: 15px;
@@ -91,26 +84,13 @@
             margin-top: 10px;
             transition: background-color 0.2s;
         }
-        .page-button.calculate {
-             background-color: #28a745;
-             margin-top: 5px;
-        }
-        .page-button.back {
-             background-color: #6c757d;
-        }
-        .page-button:hover {
-            background-color: #0056b3;
-        }
-        .page-button.calculate:hover {
-            background-color: #1e7e34;
-        }
+        .page-button.calculate { background-color: #28a745; margin-top: 5px; }
+        .page-button.back { background-color: #6c757d; }
+        .page-button:hover { background-color: #0056b3; }
+        .page-button.calculate:hover { background-color: #1e7e34; }
 
         /* Page 2 스타일 */
-        #formulaInput {
-            font-size: 24px;
-            height: 40px;
-            text-align: right;
-        }
+        #formulaInput { font-size: 24px; height: 40px; text-align: right; }
         #resultDisplay {
             font-size: 20px;
             font-weight: bold;
@@ -122,12 +102,7 @@
             padding: 0 12px;
             margin-top: 10px;
         }
-        .rate-info {
-            font-size: 14px;
-            color: #6c757d;
-            text-align: center;
-            margin-bottom: 15px;
-        }
+        .rate-info { font-size: 14px; color: #6c757d; text-align: center; margin-bottom: 15px; }
         
         /* 키패드 CSS */
         #keypad {
@@ -145,31 +120,17 @@
             cursor: pointer;
             transition: background-color 0.1s;
         }
-        .keypad-button:active {
-            background-color: #ddd;
-        }
-        .operator {
-            background-color: #ff9500;
-            color: white;
-        }
-        .clear {
-            background-color: #ff3b30;
-            color: white;
-        }
-        
-        /* 새로운 버튼 스타일 */
+        .keypad-button:active { background-color: #ddd; }
+        .operator { background-color: #ff9500; color: white; }
+        .clear { background-color: #ff3b30; color: white; }
         .special-func {
-            background-color: #17a2b8; /* 하늘색 계열 */
+            background-color: #17a2b8;
             color: white;
             font-size: 16px;
-            padding: 10px; /* 텍스트가 길어져서 패딩 줄임 */
+            padding: 10px;
             line-height: 1.2;
         }
-        .special-func:active {
-            background-color: #138496;
-        }
-        
-        /* 용어 스타일 */
+        .special-func:active { background-color: #138496; }
         .dynamic-unit {
             font-weight: 800;
             color: #007bff;
@@ -261,16 +222,16 @@
     </div>
 
     <script>
-        // JavaScript: 페이지 전환 및 계산 로직
+        'use strict';
+        
         document.addEventListener('DOMContentLoaded', () => {
-            // Page 1 Elements (생략)
+            // ------------------ DOM 요소 선언 (const 사용) ------------------
             const rateInput = document.getElementById('rateInput');
             const amountA = document.getElementById('amountA');
             const amountB = document.getElementById('amountB');
             const unitA = document.getElementById('unitA');
             const unitB = document.getElementById('unitB');
 
-            // Page 2 Elements (생략)
             const page1 = document.getElementById('page1');
             const page2 = document.getElementById('page2');
             const rateInfo = document.getElementById('rateInfo');
@@ -279,52 +240,60 @@
             const labelUnitA = document.getElementById('labelUnitA');
             const labelUnitB = document.getElementById('labelUnitB');
 
-            // 전역 변수 (데이터 전달용) (생략)
+            // ------------------ 전역 상태 변수 ------------------
             let currentRate = 0;
             let currentUnitA = '';
             let currentUnitB = '';
 
-            // --- Page 1 Logic (Basic Calculator) (생략) ---
-            function calculateB() {
+            // ------------------ Page 1 Logic (Basic Calculator) ------------------
+            
+            const calculateB = () => {
                 const R = parseFloat(rateInput.value) || 0;
                 const A = parseFloat(amountA.value) || 0;
                 if (R <= 0 && A > 0) { amountB.value = '오류'; return; }
                 const B = A * R;
                 amountB.value = B.toFixed(2);
-            }
-            function calculateA() {
+            };
+            const calculateA = () => {
                 const R = parseFloat(rateInput.value) || 0;
                 const B = parseFloat(amountB.value) || 0;
                 if (R <= 0 && B > 0) { amountA.value = '오류'; return; }
                 const A = B / R;
                 amountA.value = A.toFixed(2);
-            }
-            function applyUppercase(event) {
+            };
+            const applyUppercase = (event) => {
                 event.target.value = event.target.value.toUpperCase();
                 calculateB(); 
-            }
+            };
+            
+            // 이벤트 리스너 등록
             unitA.addEventListener('input', applyUppercase);
             unitB.addEventListener('input', applyUppercase);
             rateInput.addEventListener('input', calculateB);
             amountA.addEventListener('input', calculateB);
             amountB.addEventListener('input', calculateA);
 
-            // --- Page 2 Keypad Logic ---
-            window.appendChar = function(char) {
+            // ------------------ Page 2 Keypad and Function Logic ------------------
+            
+            // 키패드 입력 및 포커스 유지
+            window.appendChar = (char) => {
                 formulaInput.value += char;
+                formulaInput.focus(); // 포커스 유지
             };
 
-            window.clearInput = function() {
+            window.clearInput = () => {
                 formulaInput.value = '';
                 resultDisplay.textContent = '0.00 ' + currentUnitB;
+                formulaInput.focus();
             };
 
-            window.deleteChar = function() {
+            window.deleteChar = () => {
                 formulaInput.value = formulaInput.value.slice(0, -1);
+                formulaInput.focus();
             };
 
-            // **새로운 기능 1: 팁 및 부과세 적용**
-            window.applyTipTax = function() {
+            // 기능 1: 팁 및 부과세 적용
+            window.applyTipTax = () => {
                 const percentage = prompt("적용할 팁/부과세 비율(%)을 입력하세요. (예: 10)");
                 const rate = parseFloat(percentage);
 
@@ -333,16 +302,13 @@
                     return;
                 }
                 
-                // (1 + 비율/100) 형태로 수식에 추가
                 const multiplier = (1 + rate / 100).toFixed(4);
                 formulaInput.value += `*(${multiplier})`;
-                
-                // 수식을 적용한 후 바로 계산을 원할 경우 다음 줄 주석 해제
-                // calculateFormula();
+                formulaInput.focus();
             };
 
-            // **새로운 기능 2: 할인 적용**
-            window.applyDiscount = function() {
+            // 기능 2: 할인 적용
+            window.applyDiscount = () => {
                 const percentage = prompt("적용할 할인 비율(%)을 입력하세요. (예: 20)");
                 const rate = parseFloat(percentage);
 
@@ -351,19 +317,18 @@
                     return;
                 }
 
-                // (1 - 비율/100) 형태로 수식에 추가
                 const multiplier = (1 - rate / 100).toFixed(4);
                 formulaInput.value += `*(${multiplier})`;
-
-                // 수식을 적용한 후 바로 계산을 원할 경우 다음 줄 주석 해제
-                // calculateFormula();
+                formulaInput.focus();
             };
             
-            // --- Page 2 Formula Calculation Logic (생략) ---
-            window.calculateFormula = function() {
+            // ------------------ Page 2 Formula Calculation Logic (eval() 대체) ------------------
+            
+            window.calculateFormula = () => {
                 const expression = formulaInput.value;
                 
-                let cleanExpression = String(expression).replace(/[^-()\d/*+.]/g, ''); 
+                // 수식 정제: 숫자, 사칙연산, 괄호, 소수점 외 문자 제거
+                const cleanExpression = String(expression).replace(/[^-()\d/*+.]/g, ''); 
                 if (cleanExpression.trim() === '') {
                     resultDisplay.textContent = '0.00 ' + currentUnitB;
                     return;
@@ -371,7 +336,8 @@
 
                 let baseResult;
                 try {
-                    baseResult = eval(cleanExpression);
+                    // **eval() 대체: new Function() 사용으로 보안 강화**
+                    baseResult = new Function('return ' + cleanExpression)();
                     if (!isFinite(baseResult)) baseResult = 0;
                 } catch (e) {
                     resultDisplay.textContent = '수식 오류';
@@ -389,8 +355,9 @@
                 }
             };
             
-            // --- Page Navigation Logic (생략) ---
-            window.goToPage2 = function() {
+            // ------------------ Page Navigation Logic ------------------
+            
+            window.goToPage2 = () => {
                 const rate = parseFloat(rateInput.value);
                 const unitAValue = unitA.value.toUpperCase();
                 const unitBValue = unitB.value.toUpperCase();
@@ -415,11 +382,14 @@
 
                 page1.style.display = 'none';
                 page2.style.display = 'block';
+                formulaInput.focus(); // 페이지 이동 후 포커스 설정
             };
 
-            window.goToPage1 = function() {
+            window.goToPage1 = () => {
                 page1.style.display = 'block';
                 page2.style.display = 'none';
+                // Page 1의 amountA에 포커스 설정
+                amountA.focus(); 
             };
         });
     </script>
